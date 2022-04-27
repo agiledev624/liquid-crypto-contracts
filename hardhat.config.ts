@@ -3,7 +3,7 @@ import "@nomiclabs/hardhat-web3";
 import "@nomiclabs/hardhat-ethers";
 import "@nomiclabs/hardhat-etherscan";
 import "@openzeppelin/hardhat-upgrades";
-// import "@typechain/hardhat";
+import "@typechain/hardhat";
 import "./tasks";
 
 import { HardhatUserConfig } from "hardhat/src/types/config";
@@ -19,6 +19,11 @@ const hardhatNetworkAccounts = buildHardhatNetworkAccounts(accounts);
 const config: DeploymentConfig = {
   defaultNetwork: "hardhat",
   networks: {
+    ethereum: {
+      url: "https://mainnet.infura.io/v3/f356deefbe9b4e79adc764482378221f",
+      chainId: 1,
+      accounts,
+    },
     hardhat: {
       // accounts visible to hardhat network used by `hardhat node --fork` (yarn net <chainName>)
       accounts: hardhatNetworkAccounts,
@@ -34,7 +39,7 @@ const config: DeploymentConfig = {
       accounts,
     },
     avax: {
-      url: "https://rpc.ankr.com/avalanche",
+      url: "https://api.avax.network/ext/bc/C/rpc",
       chainId: 43114,
       accounts,
     },
@@ -44,8 +49,7 @@ const config: DeploymentConfig = {
       accounts,
     },
     fantom: {
-      // url: "https://rpc.ftm.tools",
-      url: "https://rpc.ankr.com/fantom",
+      url: "https://rpc.ftm.tools",
       chainId: 250,
       accounts,
     },
@@ -71,8 +75,7 @@ const config: DeploymentConfig = {
     },
     cronos: {
       // url: "https://evm-cronos.crypto.org",
-      // url: "https://rpc.vvs.finance/",
-      url: "https://cronosrpc-1.xstaking.sg/",
+      url: "https://rpc.vvs.finance/",
       chainId: 25,
       accounts,
     },
@@ -84,6 +87,11 @@ const config: DeploymentConfig = {
     testnet: {
       url: "https://data-seed-prebsc-1-s1.binance.org:8545/",
       chainId: 97,
+      accounts,
+    },
+    ropsten: {
+      url: "https://ropsten.infura.io/v3/f356deefbe9b4e79adc764482378221f",
+      chainId: 3,
       accounts,
     },
     kovan: {
@@ -106,8 +114,8 @@ const config: DeploymentConfig = {
       chainId: 1088,
       accounts,
     },
-    moonbeam: {
-      url: "https://rpc.api.moonbeam.network",
+    moonbase: {
+      url: `https://rpc.api.moonbeam.network`,
       chainId: 1284,
       accounts,
     },
@@ -115,7 +123,30 @@ const config: DeploymentConfig = {
   etherscan: {
     // Your API key for Etherscan
     // Obtain one at https://etherscan.io/
-    apiKey: process.env.API_KEY,
+
+    // ethereum
+    // apiKey: "TE3F6K34Z4BAZ5EV5MH46Z925YEP6UYWXF",
+    //bsc
+    // apiKey: "XCEKRCQ5N7VZ5W6FTQ1T2ZI1URRC3PKTDI",
+
+    //fantom
+    // apiKey: "DNJBI86CP6V24HIVVB1SB7P1J3214M79YJ",
+
+    //polygon
+    // apiKey: "4CM9Q2AMDM43Q9E5VWN9G3GINY4T6IBUNK",
+
+    //moonbeam
+    // apiKey: "18BM1MUSBZDX23PMMF3FTME988BBK8HIU7",
+
+    //avax
+    apiKey: "FJ27AT4M5V7XDTZ9GXZ5ES73A6RJQIRXTG",
+
+    // additionalNetworks: {
+    //   bsc: "XCEKRCQ5N7VZ5W6FTQ1T2ZI1URRC3PKTDI",
+    //   fantom: "DNJBI86CP6V24HIVVB1SB7P1J3214M79YJ",
+    //   polygon: "4CM9Q2AMDM43Q9E5VWN9G3GINY4T6IBUNK",
+    //   moonbase: "18BM1MUSBZDX23PMMF3FTME988BBK8HIU7",
+    // },
   },
   solidity: {
     compilers: [
@@ -167,7 +198,8 @@ const config: DeploymentConfig = {
     ],
   },
   paths: {
-    sources: "./contracts/BIFI",
+    sources: "./contracts/liquidC",
+    artifacts: "./artifacts",
   },
 };
 

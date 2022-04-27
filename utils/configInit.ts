@@ -19,6 +19,17 @@ export const getPKs = () => {
   return accounts;
 };
 
+export const getPlatformAccounts = () => {
+  let strategist, keeper, liquidCFeeRecipient;
+
+  if (process.env.FEE_RECEPIENT) liquidCFeeRecipient = process.env.FEE_RECEPIENT;
+  if (process.env.KEEPER) keeper = process.env.KEEPER;
+  if (process.env.STRATEGIST) strategist = process.env.STRATEGIST;
+
+  const accounts = { strategist, keeper, liquidCFeeRecipient };
+  return accounts;
+};
+
 export const buildHardhatNetworkAccounts = (accounts: string[]) => {
   
   const hardhatAccounts = accounts.map(pk => {

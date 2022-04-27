@@ -8,7 +8,7 @@ const zapNativeToToken = async ({ amount, want, nativeTokenAddr, unirouter, swap
 
   try {
     lpPair = await ethers.getContractAt(
-      "contracts/BIFI/interfaces/common/IUniswapV2Pair.sol:IUniswapV2Pair",
+      "contracts/liquidC/interfaces/common/IUniswapV2Pair.sol:IUniswapV2Pair",
       want.address
     );
 
