@@ -36,14 +36,8 @@ const strategyParams = {
   chef: tombchef,
   unirouter: "0x60ae616a2155ee3d9a68541ba4544862310933d4",
   strategist: accounts.strategist,
-  // strategist: "0x6755b6F2067C65ca17C908789834FCdA2714A455", // Add your public address.
-
-  // keeper: beefyfinance.keeper,
-  // keeper: "0xa18Ac306483f95a1185Eb34e1B12Cf47BaaA1d01",
   keeper: accounts.keeper,
 
-  // beefyFeeRecipient: beefyfinance.beefyFeeRecipient,
-  // liquidCFeeRecipient: "0xF5c9f26BD744BE85b55B3cE8e44817A3a3C1A7cE",
   liquidCFeeRecipient: accounts.liquidCFeeRecipient,
   outputToNativeRoute: ["0x6e84a6216ea6dacc71ee8e6b0a5b7322eebc0fdd", "0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7"], // Add the route to convert from the reward token to the native token.
   secondToNativeRoute: ["0x22d4002028f537599be9f666d1c4fa138522f9c8", "0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7"],

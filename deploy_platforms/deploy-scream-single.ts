@@ -48,14 +48,7 @@ const strategyParams = {
 
   unirouter: spookyswap.router,
   strategist: accounts.strategist,
-  // strategist: "0x6755b6F2067C65ca17C908789834FCdA2714A455", // Add your public address.
-
-  // keeper: beefyfinance.keeper,
-  // keeper: "0xa18Ac306483f95a1185Eb34e1B12Cf47BaaA1d01",
   keeper: accounts.keeper,
-
-  // beefyFeeRecipient: beefyfinance.beefyFeeRecipient,
-  // liquidCFeeRecipient: "0xF5c9f26BD744BE85b55B3cE8e44817A3a3C1A7cE",
   liquidCFeeRecipient: accounts.liquidCFeeRecipient,
 };
 
@@ -116,8 +109,6 @@ async function main() {
   console.log();
   console.log("Vault:", vault.address);
   console.log("Strategy:", strategy.address);
-  // console.log("Want:", strategyParams.want);
-  // console.log("PoolId:", strategyParams.poolId);
 
   console.log();
   console.log("Running post deployment");
