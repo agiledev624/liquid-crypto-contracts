@@ -25,8 +25,8 @@ const tombchef = web3.utils.toChecksumAddress("0xcc0a87F7e7c693042a9Cc703661F506
 const shouldVerifyOnEtherscan = true;
 
 const vaultParams = {
-  mooName: "Scream USDC TokenX", // Update the mooName.
-  mooSymbol: "tokenXScreamUSDC", // Update the mooSymbol.
+  mooName: "Scream FRAX TokenX", // Update the mooName.
+  mooSymbol: "tokenXScreamFRAX", // Update the mooSymbol.
   delay: 3600,
 };
 
@@ -39,14 +39,14 @@ const strategyParams = {
     web3.utils.toChecksumAddress("0xe0654c8e6fd4d733349ac7e09f6f23da256bf475"),
     web3.utils.toChecksumAddress("0x21be370d5312f44cb42ce377bc9b8a0cef1a4c83"),
   ],
-  outputToWantRoute: [
-    web3.utils.toChecksumAddress("0xe0654c8e6fd4d733349ac7e09f6f23da256bf475"),
+  nativeToBridge: [
     web3.utils.toChecksumAddress("0x21be370d5312f44cb42ce377bc9b8a0cef1a4c83"),
-    web3.utils.toChecksumAddress("0x04068da6c83afcfa0e13ba15a6696662335d5b75"),
+    web3.utils.toChecksumAddress("0xaf319e5789945197e365e7f7fbfc56b130523b33"),
   ],
-  markets: [web3.utils.toChecksumAddress("0xE45Ac34E528907d0A0239ab5Db507688070B20bf")],
+  markets: [web3.utils.toChecksumAddress("0x4E6854EA84884330207fB557D1555961D85Fc17E")],
 
-  unirouter: spookyswap.router,
+  unirouter: "0xf491e7b69e4244ad4002bc14e878a34207e38c29",
+  unirouter2: "0x16327e3fbdaca3bcf7e38f5af2599d2ddc33ae52",
   strategist: accounts.strategist,
   // strategist: "0x6755b6F2067C65ca17C908789834FCdA2714A455", // Add your public address.
 
@@ -61,7 +61,7 @@ const strategyParams = {
 
 const contractNames = {
   vault: "LiquidCVaultV6", // Add the vault name which will be deployed.
-  strategy: "StrategyScream", // Add the strategy name which will be deployed along with the vault.
+  strategy: "StrategyScreamV2", // Add the strategy name which will be deployed along with the vault.
 };
 
 async function main() {
@@ -100,10 +100,11 @@ async function main() {
     strategyParams.borrowDepth,
     strategyParams.minLeverage,
     strategyParams.outputToNativeRoute,
-    strategyParams.outputToWantRoute,
+    strategyParams.nativeToBridge,
     strategyParams.markets,
     vault.address,
     strategyParams.unirouter,
+    strategyParams.unirouter2,
     strategyParams.keeper,
     strategyParams.strategist,
     strategyParams.liquidCFeeRecipient,

@@ -20,20 +20,20 @@ const {
 const accounts = getPlatformAccounts();
 
 const IDIA = web3.utils.toChecksumAddress("0x0b15Ddf19D47E6a86A56148fb4aFFFc6929BcB89");
-const want = web3.utils.toChecksumAddress("0x285a569edd6210a0410883d2e29471a6b0c7790d"); // Add the LP address.
-const tombchef = web3.utils.toChecksumAddress("0x77ea4a4cf9f77a034e4291e8f457af7772c2b254");
-const unirouter = web3.utils.toChecksumAddress("0xcd7d16fb918511bf7269ec4f48d61d79fb26f918");
-const shouldVerifyOnEtherscan = true;
+const want = web3.utils.toChecksumAddress("0xa4aa24b8e855052071df60e174219e6c8fee45a3"); // Add the LP address.
+const tombchef = web3.utils.toChecksumAddress("0x42b652a523367e7407fb4bf2fa1f430781e7db8c");
+const unirouter = web3.utils.toChecksumAddress("0x145863eb42cf62847a6ca784e6416c1682b1b2ae");
+const shouldVerifyOnEtherscan = false;
 
 const vaultParams = {
-  mooName: "Crona WBTC-ETH TokenX", // Update the mooName.
-  mooSymbol: "tokenXCronaWBTC-WETH", // Update the mooSymbol.
-  delay: 21600,
+  mooName: "Dark DARK-CRO TokenX", // Update the mooName.
+  mooSymbol: "tokenXDarkDARK-CRO", // Update the mooSymbol.
+  delay: 3600,
 };
 
 const strategyParams = {
   want,
-  poolId: 25, // Add the LP id.
+  poolId: 0, // Add the LP id.
   chef: tombchef,
   unirouter: unirouter,
   strategist: accounts.strategist,
@@ -46,18 +46,14 @@ const strategyParams = {
   // beefyFeeRecipient: beefyfinance.beefyFeeRecipient,
   // liquidCFeeRecipient: "0xF5c9f26BD744BE85b55B3cE8e44817A3a3C1A7cE",
   liquidCFeeRecipient: accounts.liquidCFeeRecipient,
-  outputToNativeRoute: ["0xadbd1231fb360047525bedf962581f3eee7b49fe", "0x5c7f8a570d578ed84e63fdfa7b1ee72deae1ae23"], // Add the route to convert from the reward token to the native token.
-  outputToLp0Route: [
-    "0xadbd1231fb360047525bedf962581f3eee7b49fe",
-    "0xc21223249ca28397b4b6541dffaecc539bff0c59",
-    "0x062e66477faf219f25d27dced647bf57c3107d52",
-  ], // Add the route to convert your reward token to token0.
+  outputToNativeRoute: ["0x9d3bbb0e988d9fb2d55d07fe471be2266ad9c81c", "0x5c7f8a570d578ed84e63fdfa7b1ee72deae1ae23"], // Add the route to convert from the reward token to the native token.
+  outputToLp0Route: ["0x9d3bbb0e988d9fb2d55d07fe471be2266ad9c81c", "0x5c7f8a570d578ed84e63fdfa7b1ee72deae1ae23"], // Add the route to convert your reward token to token0.
   outputToLp1Route: [
-    "0xadbd1231fb360047525bedf962581f3eee7b49fe",
-    "0xc21223249ca28397b4b6541dffaecc539bff0c59",
-    "0xe44fd7fcb2b1581822d0c862b68222998a0c299a",
+    "0x9d3bbb0e988d9fb2d55d07fe471be2266ad9c81c",
+    "0x5c7f8a570d578ed84e63fdfa7b1ee72deae1ae23",
+    "0x83b2ac8642ae46fc2823bc959ffeb3c1742c48b5",
   ], // Add the route to convert your reward token to token1.
-  pendingRewardsFunctionName: "pendingCrona", // used for rewardsAvailable(), use correct function name from masterchef
+  pendingRewardsFunctionName: "pendingReward", // used for rewardsAvailable(), use correct function name from masterchef
 };
 
 const contractNames = {
@@ -129,7 +125,7 @@ async function main() {
       verifyContract(strategy.address, strategyConstructorArguments)
     );
   }
-  await setPendingRewardsFunctionName(strategy, strategyParams.pendingRewardsFunctionName);
+  // await setPendingRewardsFunctionName(strategy, strategyParams.pendingRewardsFunctionName);
   // await setCorrectCallFee(strategy, hardhat.network.name);
   console.log();
 

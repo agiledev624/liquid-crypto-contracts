@@ -20,21 +20,21 @@ const {
 const accounts = getPlatformAccounts();
 
 const IDIA = web3.utils.toChecksumAddress("0x0b15Ddf19D47E6a86A56148fb4aFFFc6929BcB89");
-const want = web3.utils.toChecksumAddress("0xb382247667fe8ca5327ca1fa4835ae77a9907bc8"); // Add the LP address.
+const want = web3.utils.toChecksumAddress("0x4758441c1f5d067839776456033f6cd0eb9fb3d3"); // Add the LP address.
 const tombchef = web3.utils.toChecksumAddress("0x28c65dcb3a5f0d456624aff91ca03e4e315bee49");
 const shouldVerifyOnEtherscan = true;
 
 const vaultParams = {
-  mooName: "Grape GRAPE-MIM TokenX", // Update the mooName.
-  mooSymbol: "tokenXGrapeGRAPE-MIM", // Update the mooSymbol.
+  mooName: "Olive DAIe-USDTe TokenX", // Update the mooName.
+  mooSymbol: "tokenXOliveDAIe-USDTe", // Update the mooSymbol.
   delay: 3600,
 };
 
 const strategyParams = {
   want,
-  poolId: 0, // Add the LP id.
-  chef: tombchef,
-  unirouter: "0x60ae616a2155ee3d9a68541ba4544862310933d4",
+  poolId: 41, // Add the LP id.
+  chef: "0x5a9710f3f23053573301c2ab5024d0a43a461e80",
+  unirouter: "0x0c45fb63001b56a21e29c7dcc1727bfda273a368",
   strategist: accounts.strategist,
   // strategist: "0x6755b6F2067C65ca17C908789834FCdA2714A455", // Add your public address.
 
@@ -45,9 +45,13 @@ const strategyParams = {
   // beefyFeeRecipient: beefyfinance.beefyFeeRecipient,
   // liquidCFeeRecipient: "0xF5c9f26BD744BE85b55B3cE8e44817A3a3C1A7cE",
   liquidCFeeRecipient: accounts.liquidCFeeRecipient,
-  outputToNativeRoute: ["0xc55036b5348cfb45a932481744645985010d3a44", "0x130966628846bfd36ff31a822705796e8cb8c18d", "0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7"], // Add the route to convert from the reward token to the native token.
-  outputToLp0Route: ["0xc55036b5348cfb45a932481744645985010d3a44", "0x130966628846bfd36ff31a822705796e8cb8c18d"], // Add the route to convert your reward token to token0.
-  outputToLp1Route: ["0xc55036b5348cfb45a932481744645985010d3a44", "0x130966628846bfd36ff31a822705796e8cb8c18d", "0x5541d83efad1f281571b343977648b75d95cdac2"], // Add the route to convert your reward token to token1.
+  outputToNativeRoute: ["0x617724974218a18769020a70162165a539c07e8a", "0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7"], // Add the route to convert from the reward token to the native token.
+  outputToLp0Route: ["0x617724974218a18769020a70162165a539c07e8a", "0xc7198437980c041c805a1edcba50c1ce5db95118"], // Add the route to convert your reward token to token0.
+  outputToLp1Route: [
+    "0x617724974218a18769020a70162165a539c07e8a",
+    "0xc7198437980c041c805a1edcba50c1ce5db95118",
+    "0xd586e7f844cea2f87f50152665bcbc2c279d8d70",
+  ], // Add the route to convert your reward token to token1.
   pendingRewardsFunctionName: "pendingShare", // used for rewardsAvailable(), use correct function name from masterchef
 };
 

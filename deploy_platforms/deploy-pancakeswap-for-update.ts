@@ -9,44 +9,33 @@ import { getPlatformAccounts } from "../utils/configInit";
 const registerSubsidy = require("../utils/registerSubsidy");
 
 const {
-  platforms: { spookyswap },
+  platforms: { pancakeswap },
   tokens: {
-    TSHARE: { address: TSHARE },
-    FTM: { address: FTM },
-    TOMB: { address: TOMB },
+    // TSHARE: { address: TSHARE },
+    // FTM: { address: FTM },
+    // TOMB: { address: TOMB },
   },
-} = addressBook.fantom;
+} = addressBook.bsc;
 
 const accounts = getPlatformAccounts();
 
 const IDIA = web3.utils.toChecksumAddress("0x0b15Ddf19D47E6a86A56148fb4aFFFc6929BcB89");
-const want = web3.utils.toChecksumAddress("0x2A651563C9d3Af67aE0388a5c8F89b867038089e"); // Add the LP address.
-const tombchef = web3.utils.toChecksumAddress("0xcc0a87F7e7c693042a9Cc703661F5060c80ACb43");
+const want = web3.utils.toChecksumAddress("0xA39Af17CE4a8eb807E076805Da1e2B8EA7D0755b"); // Add the LP address.
+const tombchef = web3.utils.toChecksumAddress("0xa5f8C5Dbd5F286960b9d90548680aE5ebFf07652");
+const additionalCustomer = web3.utils.toChecksumAddress("0xcc0a87F7e7c693042a9Cc703661F5060c80ACb43");
 const shouldVerifyOnEtherscan = true;
 
 const vaultParams = {
-  mooName: "Scream USDC TokenX", // Update the mooName.
-  mooSymbol: "tokenXScreamUSDC", // Update the mooSymbol.
+  mooName: "CakeV2 CAKE-USDT TokenX", // Update the mooName.
+  mooSymbol: "tokenXCakeV2CAKE-USDT", // Update the mooSymbol.
   delay: 3600,
 };
 
 const strategyParams = {
-  borrowRate: 1,
-  borrowRateMax: 75,
-  borrowDepth: 1,
-  minLeverage: ethers.BigNumber.from("1000000000000000"),
-  outputToNativeRoute: [
-    web3.utils.toChecksumAddress("0xe0654c8e6fd4d733349ac7e09f6f23da256bf475"),
-    web3.utils.toChecksumAddress("0x21be370d5312f44cb42ce377bc9b8a0cef1a4c83"),
-  ],
-  outputToWantRoute: [
-    web3.utils.toChecksumAddress("0xe0654c8e6fd4d733349ac7e09f6f23da256bf475"),
-    web3.utils.toChecksumAddress("0x21be370d5312f44cb42ce377bc9b8a0cef1a4c83"),
-    web3.utils.toChecksumAddress("0x04068da6c83afcfa0e13ba15a6696662335d5b75"),
-  ],
-  markets: [web3.utils.toChecksumAddress("0xE45Ac34E528907d0A0239ab5Db507688070B20bf")],
-
-  unirouter: spookyswap.router,
+  want,
+  poolId: 47, // Add the LP id.
+  chef: tombchef,
+  unirouter: "0x10ed43c718714eb63d5aa57b78b54704e256024e",
   strategist: accounts.strategist,
   // strategist: "0x6755b6F2067C65ca17C908789834FCdA2714A455", // Add your public address.
 
@@ -57,11 +46,16 @@ const strategyParams = {
   // beefyFeeRecipient: beefyfinance.beefyFeeRecipient,
   // liquidCFeeRecipient: "0xF5c9f26BD744BE85b55B3cE8e44817A3a3C1A7cE",
   liquidCFeeRecipient: accounts.liquidCFeeRecipient,
+  additionalCustomer: "0xD3c6bdb9AdfF93bc0F491Fc47a6A61b987778328",
+  outputToNativeRoute: ["0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82", "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c"], // Add the route to convert from the reward token to the native token.
+  outputToLp0Route: ["0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82"], // Add the route to convert your reward token to token0.
+  outputToLp1Route: ["0x0e09fabb73bd3ade0a17ecc321fd13a19e81ce82", "0x55d398326f99059fF775485246999027B3197955"], // Add the route to convert your reward token to token1.
+  pendingRewardsFunctionName: "pendingCake", // used for rewardsAvailable(), use correct function name from masterchef
 };
 
 const contractNames = {
   vault: "LiquidCVaultV6", // Add the vault name which will be deployed.
-  strategy: "StrategyScream", // Add the strategy name which will be deployed along with the vault.
+  strategy: "StrategyCommonChefLPCustomerBase", // Add the strategy name which will be deployed along with the vault.
 };
 
 async function main() {
@@ -81,7 +75,6 @@ async function main() {
 
   const [deployer] = await ethers.getSigners();
   const predictedAddresses = await predictAddresses({ creator: deployer.address });
-
   console.log("Deploying:", vaultParams.mooName);
   const vaultConstructorArguments = [
     predictedAddresses.strategy,
@@ -95,18 +88,18 @@ async function main() {
 
   console.log("Deploying:", contractNames.strategy);
   const strategyConstructorArguments = [
-    strategyParams.borrowRate,
-    strategyParams.borrowRateMax,
-    strategyParams.borrowDepth,
-    strategyParams.minLeverage,
-    strategyParams.outputToNativeRoute,
-    strategyParams.outputToWantRoute,
-    strategyParams.markets,
+    strategyParams.want,
+    strategyParams.poolId,
+    strategyParams.chef,
     vault.address,
     strategyParams.unirouter,
     strategyParams.keeper,
     strategyParams.strategist,
     strategyParams.liquidCFeeRecipient,
+    strategyParams.additionalCustomer,
+    strategyParams.outputToNativeRoute,
+    strategyParams.outputToLp0Route,
+    strategyParams.outputToLp1Route,
   ];
   const strategy = await Strategy.deploy(...strategyConstructorArguments);
   await strategy.deployed();
@@ -116,8 +109,8 @@ async function main() {
   console.log();
   console.log("Vault:", vault.address);
   console.log("Strategy:", strategy.address);
-  // console.log("Want:", strategyParams.want);
-  // console.log("PoolId:", strategyParams.poolId);
+  console.log("Want:", strategyParams.want);
+  console.log("PoolId:", strategyParams.poolId);
 
   console.log();
   console.log("Running post deployment");

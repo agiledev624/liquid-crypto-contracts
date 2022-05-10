@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+
 
 pragma solidity ^0.6.12;
 
@@ -15,9 +15,12 @@ import "../../interfaces/common/IVToken.sol";
 import "../Common/StratManager.sol";
 import "../Common/FeeManager.sol";
 
+interface IFRAX {
+    function exchangeOldForCanonical(address bridge_token_address, uint256 token_amount) external returns (uint256 canonical_tokens_out);
+}
 
 //Lending Strategy 
-contract StrategyScream is StratManager, FeeManager {
+contract StrategyScreamV2 is StratManager, FeeManager {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
@@ -25,14 +28,16 @@ contract StrategyScream is StratManager, FeeManager {
     address public native;
     address public output;
     address public want;
+    address public bridgeToken;
     address public iToken;
 
     // Third party contracts
     address constant public comptroller = 0x260E596DAbE3AFc463e75B6CC05d8c46aCAcFB09;
 
     // Routes
+    address public unirouter2;
     address[] public outputToNativeRoute;
-    address[] public outputToWantRoute;
+    address[] public nativeToBridgeTokenRoute;
     address[] public markets;
 
     bool public harvestOnDeposit;
@@ -55,10 +60,10 @@ contract StrategyScream is StratManager, FeeManager {
 
     /**
      * @dev Helps to differentiate borrowed funds that shouldn't be used in functions like 'deposit()'
-     * as they're required to deleverage correctly.
+     * as they're required to deleverage correctly.  
      */
     uint256 public reserves;
-
+    
     uint256 public balanceOfPool;
 
     /**
@@ -75,10 +80,11 @@ contract StrategyScream is StratManager, FeeManager {
         uint256 _borrowDepth,
         uint256 _minLeverage,
         address[] memory _outputToNativeRoute,
-        address[] memory _outputToWantRoute,
+        address[] memory _nativeToBridgeTokenRoute,
         address[] memory _markets,
         address _vault,
         address _unirouter,
+        address _unirouter2,
         address _keeper,
         address _strategist,
         address _LiquidCFeeRecipient
@@ -91,16 +97,15 @@ contract StrategyScream is StratManager, FeeManager {
         iToken = _markets[0];
         markets = _markets;
         want = IVToken(iToken).underlying();
+        unirouter2 = _unirouter2;
 
         output = _outputToNativeRoute[0];
         native = _outputToNativeRoute[_outputToNativeRoute.length - 1];
         outputToNativeRoute = _outputToNativeRoute;
 
-        require(_outputToWantRoute[0] == output, "outputToWantRoute[0] != output");
-        require(_outputToWantRoute[_outputToWantRoute.length - 1] == want, "outputToNativeRoute[last] != want");
-        outputToWantRoute = _outputToWantRoute;
-
-
+        require(_nativeToBridgeTokenRoute[0] == native, "nativeToBridgeTokenRoute[0] != native");
+        bridgeToken = _nativeToBridgeTokenRoute[_nativeToBridgeTokenRoute.length - 1];
+        nativeToBridgeTokenRoute = _nativeToBridgeTokenRoute;
 
         _giveAllowances();
 
@@ -117,7 +122,7 @@ contract StrategyScream is StratManager, FeeManager {
             _leverage(wantBal);
             emit Deposit(balanceOf());
         }
-
+        
     }
 
     /**
@@ -134,7 +139,7 @@ contract StrategyScream is StratManager, FeeManager {
         }
 
         reserves = reserves.add(_amount);
-
+        
         updateBalance();
     }
 
@@ -153,22 +158,22 @@ contract StrategyScream is StratManager, FeeManager {
 
             borrowBal = IVToken(iToken).borrowBalanceCurrent(address(this));
             uint256 targetSupply = borrowBal.mul(100).div(borrowRate);
-
+        
             uint256 supplyBal = IVToken(iToken).balanceOfUnderlying(address(this));
             IVToken(iToken).redeemUnderlying(supplyBal.sub(targetSupply));
             wantBal = IERC20(want).balanceOf(address(this));
         }
 
         IVToken(iToken).repayBorrow(uint256(-1));
-
+        
         uint256 iTokenBal = IERC20(iToken).balanceOf(address(this));
         IVToken(iToken).redeem(iTokenBal);
 
         reserves = 0;
-
+        
         updateBalance();
     }
-
+    
 
     /**
      * @dev Extra safety measure that allows us to manually unwind one level. In case we somehow get into
@@ -184,16 +189,16 @@ contract StrategyScream is StratManager, FeeManager {
 
         uint256 borrowBal = IVToken(iToken).borrowBalanceCurrent(address(this));
         uint256 targetSupply = borrowBal.mul(100).div(_borrowRate);
-
+        
         uint256 supplyBal = IVToken(iToken).balanceOfUnderlying(address(this));
         IVToken(iToken).redeemUnderlying(supplyBal.sub(targetSupply));
-
+        
         wantBal = IERC20(want).balanceOf(address(this));
         reserves = wantBal;
-
+        
         updateBalance();
     }
-
+    
 
     /**
      * @dev Updates the risk profile and rebalances the vault funds accordingly.
@@ -213,7 +218,7 @@ contract StrategyScream is StratManager, FeeManager {
 
         StratRebalance(_borrowRate, _borrowDepth);
     }
-
+    
     function beforeDeposit() external override {
         if (harvestOnDeposit) {
             require(msg.sender == vault, "!vault");
@@ -245,7 +250,7 @@ contract StrategyScream is StratManager, FeeManager {
                 swapRewards();
                 uint256 wantHarvested = availableWant().sub(beforeBal);
                 deposit();
-
+                
                 lastHarvest = block.timestamp;
                 emit StratHarvest(msg.sender, wantHarvested, balanceOf());
             }
@@ -256,27 +261,27 @@ contract StrategyScream is StratManager, FeeManager {
 
     // performance fees
     function chargeFees(address callFeeRecipient) internal {
-        uint256 toNative = IERC20(output).balanceOf(address(this)).mul(100).div(1000);
+        uint256 toNative = IERC20(output).balanceOf(address(this));
         IUniswapRouter(unirouter).swapExactTokensForTokens(toNative, 0, outputToNativeRoute, address(this), now);
 
-        uint256 nativeBal = IERC20(native).balanceOf(address(this));
+        uint256 nativeBal = IERC20(native).balanceOf(address(this)).mul(100).div(1000);
 
         uint256 callFeeAmount = nativeBal.mul(callFee).div(MAX_FEE);
-        if (callFeeAmount > 0)
-            IERC20(native).safeTransfer(callFeeRecipient, callFeeAmount);
+        IERC20(native).safeTransfer(callFeeRecipient, callFeeAmount);
 
         uint256 LiquidCFeeAmount = nativeBal.mul(LiquidCFee).div(MAX_FEE);
         IERC20(native).safeTransfer(LiquidCFeeRecipient, LiquidCFeeAmount);
 
         uint256 strategistFee = nativeBal.mul(STRATEGIST_FEE).div(MAX_FEE);
-        if (strategistFee > 0)
-            IERC20(native).safeTransfer(strategist, strategistFee);
+        IERC20(native).safeTransfer(strategist, strategistFee);
     }
 
     // swap rewards to {want}
     function swapRewards() internal {
-        uint256 outputBal = IERC20(output).balanceOf(address(this));
-        IUniswapRouter(unirouter).swapExactTokensForTokens(outputBal, 0, outputToWantRoute, address(this), now);
+        uint256 nativeBal = IERC20(native).balanceOf(address(this));
+        IUniswapRouter(unirouter2).swapExactTokensForTokens(nativeBal, 0, nativeToBridgeTokenRoute, address(this), now);
+        uint256 bridgeBal = IERC20(bridgeToken).balanceOf(address(this));
+        IFRAX(want).exchangeOldForCanonical(bridgeToken, bridgeBal);
     }
 
     /**
@@ -319,7 +324,7 @@ contract StrategyScream is StratManager, FeeManager {
         uint256 wantBal = IERC20(want).balanceOf(address(this));
         return wantBal.sub(reserves);
     }
-
+    
     // return supply and borrow balance
     function updateBalance() public {
         uint256 supplyBal = IVToken(iToken).balanceOfUnderlying(address(this));
@@ -337,7 +342,7 @@ contract StrategyScream is StratManager, FeeManager {
     function balanceOfWant() public view returns (uint256) {
         return IERC20(want).balanceOf(address(this));
     }
-
+    
     // returns rewards unharvested
     function rewardsAvailable() public returns (uint256) {
         IComptroller(comptroller).claimComp(address(this), markets);
@@ -350,7 +355,7 @@ contract StrategyScream is StratManager, FeeManager {
         uint256 nativeOut;
         if (outputBal > 0) {
             try IUniswapRouter(unirouter).getAmountsOut(outputBal, outputToNativeRoute)
-                returns (uint256[] memory amountOut)
+                returns (uint256[] memory amountOut) 
             {
                 nativeOut = amountOut[amountOut.length -1];
             }
@@ -403,18 +408,22 @@ contract StrategyScream is StratManager, FeeManager {
     function _giveAllowances() internal {
         IERC20(want).safeApprove(iToken, uint256(-1));
         IERC20(output).safeApprove(unirouter, uint256(-1));
+        IERC20(native).safeApprove(unirouter2, uint256(-1));
+        IERC20(bridgeToken).safeApprove(want, uint256(-1));
     }
 
     function _removeAllowances() internal {
         IERC20(want).safeApprove(iToken, 0);
         IERC20(output).safeApprove(unirouter, 0);
+        IERC20(native).safeApprove(unirouter2, 0);
+        IERC20(bridgeToken).safeApprove(want, 0);
     }
 
      function outputToNative() external view returns(address[] memory) {
         return outputToNativeRoute;
     }
 
-    function outputToWant() external view returns(address[] memory) {
-        return outputToWantRoute;
+    function nativeToBridgeToken() external view returns(address[] memory) {
+        return nativeToBridgeTokenRoute;
     }
 }

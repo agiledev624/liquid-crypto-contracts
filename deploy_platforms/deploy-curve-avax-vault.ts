@@ -14,54 +14,51 @@ const {
     TSHARE: { address: TSHARE },
     FTM: { address: FTM },
     TOMB: { address: TOMB },
+    CRV: { address: CRV },
+    WETH: { address: WETH },
+    WBTC: { address: WBTC },
+    USDC: { address: USDC },
   },
 } = addressBook.fantom;
 
 const accounts = getPlatformAccounts();
 
 const IDIA = web3.utils.toChecksumAddress("0x0b15Ddf19D47E6a86A56148fb4aFFFc6929BcB89");
-const want = web3.utils.toChecksumAddress("0x2A651563C9d3Af67aE0388a5c8F89b867038089e"); // Add the LP address.
-const tombchef = web3.utils.toChecksumAddress("0xcc0a87F7e7c693042a9Cc703661F5060c80ACb43");
+const want = web3.utils.toChecksumAddress("0x9dc516a18775d492c9f061211c8a3fdcd476558d"); // Add the LP address.
+const curvechef = web3.utils.toChecksumAddress("0x8866414733F22295b7563f9C5299715D2D76CAf4");
+const curvepool = web3.utils.toChecksumAddress("0x7f90122bf0700f9e7e1f688fe926940e8839f353");
 const shouldVerifyOnEtherscan = true;
 
 const vaultParams = {
-  mooName: "Scream USDC TokenX", // Update the mooName.
-  mooSymbol: "tokenXScreamUSDC", // Update the mooSymbol.
-  delay: 3600,
+  mooName: "Curve 4pool TokenX", // Update the mooName.
+  mooSymbol: "tokenXCurve4pool", // Update the mooSymbol.
+  delay: 600,
 };
 
 const strategyParams = {
-  borrowRate: 1,
-  borrowRateMax: 75,
-  borrowDepth: 1,
-  minLeverage: ethers.BigNumber.from("1000000000000000"),
-  outputToNativeRoute: [
-    web3.utils.toChecksumAddress("0xe0654c8e6fd4d733349ac7e09f6f23da256bf475"),
-    web3.utils.toChecksumAddress("0x21be370d5312f44cb42ce377bc9b8a0cef1a4c83"),
-  ],
-  outputToWantRoute: [
-    web3.utils.toChecksumAddress("0xe0654c8e6fd4d733349ac7e09f6f23da256bf475"),
-    web3.utils.toChecksumAddress("0x21be370d5312f44cb42ce377bc9b8a0cef1a4c83"),
-    web3.utils.toChecksumAddress("0x04068da6c83afcfa0e13ba15a6696662335d5b75"),
-  ],
-  markets: [web3.utils.toChecksumAddress("0xE45Ac34E528907d0A0239ab5Db507688070B20bf")],
+  want,
+  gaugeFactory: "0xabc000d88f23bb45525e447528dbf656a9d55bf5",
+  gauge: "0xd0698b2e41c42bce42b51f977f962fd127cf82ea",
+  pool: "0x9dc516a18775d492c9f061211c8a3fdcd476558d", // Add the LP id.
+  poolSize: 4,
+  depositIndex: 3,
+  useUnderlying: false,
+  useMetapool: false,
 
-  unirouter: spookyswap.router,
-  strategist: accounts.strategist,
-  // strategist: "0x6755b6F2067C65ca17C908789834FCdA2714A455", // Add your public address.
-
-  // keeper: beefyfinance.keeper,
   // keeper: "0xa18Ac306483f95a1185Eb34e1B12Cf47BaaA1d01",
+  unirouter: "0xf491e7b69e4244ad4002bc14e878a34207e38c29",
+  strategist: accounts.strategist,
   keeper: accounts.keeper,
-
   // beefyFeeRecipient: beefyfinance.beefyFeeRecipient,
   // liquidCFeeRecipient: "0xF5c9f26BD744BE85b55B3cE8e44817A3a3C1A7cE",
   liquidCFeeRecipient: accounts.liquidCFeeRecipient,
+  crvToNativeRoute: ["0x1e4f97b9f9f913c46f1632781732927b9019c68b", "0x21be370d5312f44cb42ce377bc9b8a0cef1a4c83"], // Add the route to convert from the reward token to the native token.
+  nativeToDeposit: ["0x21be370d5312f44cb42ce377bc9b8a0cef1a4c83", "0x049d68029688eabf473097a2fc38ef61633a3c7a"], // Add the route to convert your reward token to token0.
 };
 
 const contractNames = {
   vault: "LiquidCVaultV6", // Add the vault name which will be deployed.
-  strategy: "StrategyScream", // Add the strategy name which will be deployed along with the vault.
+  strategy: "StrategyCommonChefLP", // Add the strategy name which will be deployed along with the vault.
 };
 
 async function main() {
@@ -95,13 +92,16 @@ async function main() {
 
   console.log("Deploying:", contractNames.strategy);
   const strategyConstructorArguments = [
-    strategyParams.borrowRate,
-    strategyParams.borrowRateMax,
-    strategyParams.borrowDepth,
-    strategyParams.minLeverage,
-    strategyParams.outputToNativeRoute,
-    strategyParams.outputToWantRoute,
-    strategyParams.markets,
+    strategyParams.want,
+    strategyParams.gaugeFactory,
+    strategyParams.gauge,
+    strategyParams.pool,
+    strategyParams.poolSize,
+    strategyParams.depositIndex,
+    strategyParams.useUnderlying,
+    strategyParams.useMetapool,
+    strategyParams.crvToNativeRoute,
+    strategyParams.nativeToDeposit,
     vault.address,
     strategyParams.unirouter,
     strategyParams.keeper,
@@ -116,7 +116,7 @@ async function main() {
   console.log();
   console.log("Vault:", vault.address);
   console.log("Strategy:", strategy.address);
-  // console.log("Want:", strategyParams.want);
+  console.log("Want:", strategyParams.want);
   // console.log("PoolId:", strategyParams.poolId);
 
   console.log();

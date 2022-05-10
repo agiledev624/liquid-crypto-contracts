@@ -24,44 +24,41 @@ const {
 const accounts = getPlatformAccounts();
 
 const IDIA = web3.utils.toChecksumAddress("0x0b15Ddf19D47E6a86A56148fb4aFFFc6929BcB89");
-const want = web3.utils.toChecksumAddress("0x1337bedc9d22ecbe766df105c9623922a27963ec"); // Add the LP address.
+const want = web3.utils.toChecksumAddress("0x9dc516a18775d492c9f061211c8a3fdcd476558d"); // Add the LP address.
 const curvechef = web3.utils.toChecksumAddress("0x8866414733F22295b7563f9C5299715D2D76CAf4");
 const curvepool = web3.utils.toChecksumAddress("0x7f90122bf0700f9e7e1f688fe926940e8839f353");
 const shouldVerifyOnEtherscan = true;
-const useUnderlying = false;
-const poolSize = 3;
-const depositIndex = 2;
 
 const vaultParams = {
-  mooName: "Curve Av3CRV TokenX", // Update the mooName.
-  mooSymbol: "tokenXCurveAv3CRV", // Update the mooSymbol.
-  delay: 3600,
+  mooName: "Curve 4pool TokenX", // Update the mooName.
+  mooSymbol: "tokenXCurve4pool", // Update the mooSymbol.
+  delay: 600,
 };
 
 const strategyParams = {
   want,
-  poolId: 0, // Add the LP id.
-  chef: curvechef,
-  unirouter: "0x60ae616a2155ee3d9a68541ba4544862310933d4",
-  strategist: accounts.strategist,
-  // strategist: "0x6755b6F2067C65ca17C908789834FCdA2714A455", // Add your public address.
+  gaugeFactory: "0xabc000d88f23bb45525e447528dbf656a9d55bf5",
+  gauge: "0xd0698b2e41c42bce42b51f977f962fd127cf82ea",
+  pool: "0x9dc516a18775d492c9f061211c8a3fdcd476558d", // Add the LP id.
+  poolSize: 4,
+  depositIndex: 3,
+  useUnderlying: false,
+  useMetapool: false,
 
-  // keeper: beefyfinance.keeper,
   // keeper: "0xa18Ac306483f95a1185Eb34e1B12Cf47BaaA1d01",
+  unirouter: "0xf491e7b69e4244ad4002bc14e878a34207e38c29",
+  strategist: accounts.strategist,
   keeper: accounts.keeper,
-
   // beefyFeeRecipient: beefyfinance.beefyFeeRecipient,
   // liquidCFeeRecipient: "0xF5c9f26BD744BE85b55B3cE8e44817A3a3C1A7cE",
   liquidCFeeRecipient: accounts.liquidCFeeRecipient,
-  outputToNativeRoute: ["0x47536f17f4ff30e64a96a7555826b8f9e66ec468", "0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7"], // Add the route to convert from the reward token to the native token.
-  outputToLp0Route: ["0xb31f66aa3c1e785363f0875a1b74e27b85fd66c7", "0xc7198437980c041c805a1edcba50c1ce5db95118"], // Add the route to convert your reward token to token0.
-  outputToLp1Route: [TSHARE, FTM, TOMB], // Add the route to convert your reward token to token1.
-  pendingRewardsFunctionName: "pendingCake", // used for rewardsAvailable(), use correct function name from masterchef
+  crvToNativeRoute: ["0x1e4f97b9f9f913c46f1632781732927b9019c68b", "0x21be370d5312f44cb42ce377bc9b8a0cef1a4c83"], // Add the route to convert from the reward token to the native token.
+  nativeToDeposit: ["0x21be370d5312f44cb42ce377bc9b8a0cef1a4c83", "0x049d68029688eabf473097a2fc38ef61633a3c7a"], // Add the route to convert your reward token to token0.
 };
 
 const contractNames = {
   vault: "LiquidCVaultV6", // Add the vault name which will be deployed.
-  strategy: "StrategyCurveCommonLP", // Add the strategy name which will be deployed along with the vault.
+  strategy: "StrategyCurveLP", // Add the strategy name which will be deployed along with the vault.
 };
 
 async function main() {
@@ -96,18 +93,20 @@ async function main() {
   console.log("Deploying:", contractNames.strategy);
   const strategyConstructorArguments = [
     strategyParams.want,
-    curvechef,
-    curvepool,
-    poolSize,
-    depositIndex,
-    useUnderlying,
-    strategyParams.outputToNativeRoute,
-    strategyParams.outputToLp0Route,
+    strategyParams.gaugeFactory,
+    strategyParams.gauge,
+    strategyParams.pool,
+    strategyParams.poolSize,
+    strategyParams.depositIndex,
+    strategyParams.useUnderlying,
+    strategyParams.useMetapool,
+    strategyParams.crvToNativeRoute,
+    strategyParams.nativeToDeposit,
     vault.address,
     strategyParams.unirouter,
     strategyParams.keeper,
     strategyParams.strategist,
-    strategyParams.liquidCFeeRecipient,
+    strategyParams.liquidCFeeRecipient
   ];
   const strategy = await Strategy.deploy(...strategyConstructorArguments);
   await strategy.deployed();
@@ -118,7 +117,7 @@ async function main() {
   console.log("Vault:", vault.address);
   console.log("Strategy:", strategy.address);
   console.log("Want:", strategyParams.want);
-  console.log("PoolId:", strategyParams.poolId);
+  // console.log("PoolId:", strategyParams.poolId);
 
   console.log();
   console.log("Running post deployment");
